@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "current-chart.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "current-chart.labels" . | nindent 4 }}
+binaryData:
+  {{- if .Values.app.jcp.enabled }}
+    {{- range $certName, $certData := .Values.app.jcp.certs }}
+      {{ $certName | nindent 2 }}: {{ $certData }}
+    {{- end }}
+  {{- end }}
+data:
+  bootstrap.yml: |
+    server:
+        port: {{ .Values.app.ports.app }}
+        contextPath: {{ .Values.app.contextPath }} # for SpringBoot 1.5
+        servlet:
+          contextPath: {{ .Values.app.contextPath }}
+    spring:
+      application:
+        name: {{ .Values.spring.appName }}
+      cloud:
+        config:
+          uri: {{ .Values.spring.configUri }}
+          fail-fast: true
+      main:
+        allow-bean-definition-overriding: true
+    app:
+      basePath: {{ .Values.ingress.path }}
+  profiles: {{ .Values.app.profiles }}
+  maxMem: {{ .Values.app.maxMem }}

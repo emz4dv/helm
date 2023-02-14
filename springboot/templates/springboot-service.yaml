@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "current-chart.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "current-chart.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.app.nodePort.enabled }}
+  type: NodePort
+  {{- end }}
+  ports:
+    - port: {{ .Values.app.ports.service }}
+      targetPort: http
+      protocol: TCP
+      name: web
+      {{- if .Values.app.nodePort.enabled }}
+      nodePort: {{ .Values.app.nodePort.port }}
+      {{- end }}
+    {{- if .Values.app.jmx.enabled }}
+    - port: {{ .Values.app.jmx.port }}
+      targetPort: jmx
+      protocol: TCP
+      name: jmx
+      {{- if .Values.app.nodePort.enabled }}
+      nodePort: {{ .Values.app.jmx.nodePort.port }}
+      {{- end }}
+    - port: {{ .Values.app.jmx.rmi.port }}
+      targetPort: jmx-rmi
+      protocol: TCP
+      name: jmx-rmi
+      {{- if .Values.app.nodePort.enabled }}
+      nodePort: {{ .Values.app.jmx.nodePort.rmi.port }}
+      {{- end }}
+    {{- end }}
+
+  selector:
+    {{- include "current-chart.selectorLabels" . | nindent 4 }}

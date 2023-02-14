@@ -1,0 +1,40 @@
+{{- if .Values.test.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "current-chart.fullname" . }}-test
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "current-chart.fullname" . }}-test
+  annotations:
+    "helm.sh/hook": test
+data:
+  config.yaml: |
+    tests:
+      podStatus:
+        timeouts:
+          counts: {{ .Values.test.podStatus.timeouts.counts }}
+          seconds: {{ .Values.test.podStatus.timeouts.seconds }}
+      springboot:
+        since: {{ .Values.test.springboot.since }}
+        timeouts:
+          counts: {{ .Values.test.springboot.timeouts.counts }}
+          seconds: {{ .Values.test.springboot.timeouts.seconds }}
+    app:
+      name: {{ .Values.app.name }}
+      artifact: {{ .Values.app.artifact }}
+      port: {{ .Values.app.ports.service }}
+
+    conf:
+      url: {{ .Values.spring.configUri }}
+      profiles: {{ .Values.app.profiles }}
+    
+    auth:
+      realm: {{ .Values.test.auth.realm }}
+    
+    k8s:
+      inCluster: true
+      cluster: ""
+      namespace: {{ .Release.Namespace }}
+
+{{- end }}

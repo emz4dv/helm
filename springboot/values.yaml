@@ -1,0 +1,132 @@
+test:
+  enabled: false
+  image: docker-registry/k8s-utils:x
+  podStatus:
+    timeouts:
+      counts: 10
+      seconds: 3
+  springboot:
+    since: "10m"
+    timeouts:
+      counts: 15
+      seconds: 10
+  auth:
+    realm: ""
+  k8s:
+    inCluster: true
+
+app:
+  name: "appName"
+  artifact: "artifactName"
+  image: docker-registry/app-server:x
+  imagePullSecret: XXX-docker-secret
+  maxMem: 256M
+  debug: false
+  replicas: 1
+  profiles: dev,XXXdev
+  contextPath: /
+  priority: medium-priority
+  extraArgs:
+# === Example ===
+#    - -XX:MaxMetaspaceSize=1G
+#    - -XX:CompressedClassSpaceSize=1G
+  serviceaccount:
+    enabled: false
+# === Example ===
+#   name: svc-acc-name
+  resources:
+    enabled: true
+    requests:
+      memory: "64Mi"
+      cpu: "5m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  jcp:
+    enabled: false
+    path: /tmp/jcp
+
+  jmx:
+    enabled: false
+    port: 1234
+    rmi:
+      port: 1235
+    nodePort:
+      enabled: false
+      port: 0
+      rmi:
+        port: 0
+
+# === Example ===
+#    certs:
+#      test.cer: !!binary |-
+#        MO+/XXXXXXXXX9BXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  nodePort:
+    enabled: false
+    port: 0
+
+  ports:
+    service: 9000
+    app: 80
+  probes:
+    startupProbe:
+      enabled: false
+      path: /actuator/health
+      initialDelaySeconds: 20
+      periodSeconds: 3
+      failureThreshold: 20
+    readinessProbe:
+      enabled: false
+      path: /actuator/health
+      periodSeconds: 5
+      timeoutSeconds: 3
+      successThreshold: 2
+      failureThreshold: 3
+  hostAliases:
+    enabled: false
+  logs:
+    annotations: {}
+    sizeLimit:
+      enabled: false
+      size: 300Mi
+    fluentBit:
+      enable: false
+      image: docker.XXXXX.ru/library/fluent-bit/fluent-bit:1.8.11
+      debug:
+        enabled: false
+      fluentd:
+        host: ""        # Host kibana-pp.XXX.local
+        port: ""        # Port 12224
+      config:
+        infsystem: ""   # XXX
+        env: ""         # prod, stage, predprod
+        suffix: ""      # sys
+# === Example ===
+#    hosts:
+#      - ip: XX.XX.XX.XX
+#        hostnames:
+#          - nginx.XXX.local
+#          - app.XXX.local
+#          - redis.XXX.local
+#          - solr.XXX.local
+#          - alfresco.XXX.local
+#      - ip: XX.XX.XX.XX
+#        hostnames:
+#          - db.XXX.local
+#          - ldap.XXX.local
+#      - ip: XX.XX.XX.XX
+#        hostnames:
+#          - solr7.XXX.local
+#      - ip: XX.XX.XX.XX
+#        hostnames:
+#          - hazelcast.XXX.local
+
+ingress:
+  enabled: true
+# === Example ===
+#  host: XXX-dev.YYY-int.ru
+#  path: ["/app"]
+
+spring:
+  configUri: http://app.XXXX.local:5000/conf
+  appName: app

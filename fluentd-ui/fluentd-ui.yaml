@@ -1,0 +1,14 @@
+nodeSelector:
+  kubernetes.io/hostname: node2
+
+service:
+  type: NodePort
+  port: 9292
+  nodePort: 31234
+
+plugins:
+  - fluent-plugin-concat
+  - fluent-plugin-kubernetes_metadata_filter
+  - fluent-plugin-grok-parser
+  - fluent-plugin-rewrite-tag-filter
+  - fluent-plugin-elasticsearch

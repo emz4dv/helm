@@ -1,0 +1,63 @@
+{{- if .Values.app.logs.fluentBit.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "current-chart.fullname" . }}-fb-conf
+  namespace: {{ .Release.Namespace }}
+data:
+  fluent-bit.conf: |
+    @SET infsystem={{ .Values.app.logs.fluentBit.config.infsystem }}
+    @SET env={{ .Values.app.logs.fluentBit.config.env }}
+    @SET suffix={{ .Values.app.logs.fluentBit.config.suffix }}
+
+    [SERVICE]
+        Flush             1
+        Daemon            Off
+        {{- if .Values.app.logs.fluentBit.debug.enabled }}
+        Log_Level         debug
+        {{- end }}
+        Parsers_File      parsers.conf
+        HTTP_Server       On
+        HTTP_Listen       0.0.0.0
+        HTTP_Port         2020
+
+    @INCLUDE input-kubernetes.conf
+    @INCLUDE filter-kubernetes.conf
+    @INCLUDE output-elasticsearch.conf
+  parsers.conf: |
+    [PARSER]
+        Name              podapp
+        Format            json
+        Time_Key          time
+        Time_Format       %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep         On
+        # Command      |  Decoder | Field | Optional Action
+        # =============|==================|=================
+        Decode_Field_As   escaped_utf8    log    do_next
+        Decode_Field_As   json       log
+  input-kubernetes.conf: |
+    [INPUT]
+        Name              tail
+        Tag               ${infsystem}-${env}-${suffix}.*
+        Parser            podapp
+        Path              /logs/server.log
+        DB                /var/log/fluentbit-YYY-${APP_NAME}.log.db
+        Mem_Buf_Limit     50MB
+        Refresh_Interval  10
+        Skip_Long_Lines   On
+  filter-kubernetes.conf: |
+    [FILTER]
+        Name              modify
+        Match             ${infsystem}-${env}-${suffix}.*
+        set app           ${APP_NAME}
+        set mamespace     ${APP_NAMESPACE}
+        set host          ${APP_NODENAME}
+        set pod           ${APP_POD}
+  output-elasticsearch.conf: |
+    [OUTPUT]
+        Name              forward
+        Match             *
+        Host              ${FLUENT_ELASTICSEARCH_HOST}
+        Port              ${FLUENT_ELASTICSEARCH_PORT}
+
+{{- end }}

@@ -1,0 +1,29 @@
+{{- if .Values.test.enabled -}}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "current-chart.fullname" . }}-test
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "current-chart.fullname" . }}-test
+  annotations:
+    "helm.sh/hook": test
+spec:
+  hostAliases:
+    {{- toYaml .Values.app.hostAliases.hosts | nindent 8 }}
+  imagePullSecrets:
+    - name: {{ .Values.app.imagePullSecret }}
+  containers:
+    - image: {{ .Values.test.image }}
+      imagePullPolicy: IfNotPresent
+      name: k8s-utils
+      volumeMounts:
+        - name: {{ include "current-chart.fullname" . }}-test-config
+          mountPath: /app/config.yaml
+          subPath: config.yaml
+  volumes:
+    - name: {{ include "current-chart.fullname" . }}-test-config
+      configMap:
+        name: {{ include "current-chart.fullname" . }}-test
+  restartPolicy: Never
+{{- end }}
